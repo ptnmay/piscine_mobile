@@ -1,7 +1,6 @@
-import 'package:module00/ex03/button_values.dart';
 import 'package:flutter/material.dart';
 import 'package:math_expressions/math_expressions.dart';
-
+import 'package:module00/ex03/button_values.dart';
 
 class CalculatorScreen extends StatefulWidget {
   const CalculatorScreen({super.key});
@@ -11,75 +10,84 @@ class CalculatorScreen extends StatefulWidget {
 }
 
 class _CalculatorScreenState extends State<CalculatorScreen> {
-
   String expression = "";
 
-
   @override
-Widget build(BuildContext context) {
+  Widget build(BuildContext context) {
+    final orientation = MediaQuery.of(context).orientation;
+    final screenSize = MediaQuery.of(context).size;
+    final screenWidth = screenSize.width;
+    final screenHeight = screenSize.height;
 
-  // final screenSize = MediaQuery.of(context).size;
-  final orientation = MediaQuery.of(context).orientation;
+    // Calculate dynamic font size based on screen size
+    double displayFontSize = screenWidth / 8;
 
-  return Scaffold(
-    appBar: AppBar(
-      title: const Center(child: Text("Calculator")),
-      backgroundColor: Colors.amber,
-      foregroundColor: Colors.black,
-    ),
-    body: SafeArea(
-      child: Column(
-        children: [
-          // Display area
-          Expanded(
-            flex: orientation == Orientation.portrait ? 2 : 1,
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              alignment: Alignment.bottomRight,
-              child: FittedBox(
+    // Adjust the button grid size based on screen width and orientation
+    int crossAxisCount = orientation == Orientation.portrait ? 4 : 4;
+
+    // Adjusting child aspect ratio for better fitting on large screens
+    double childAspectRatio = (screenWidth - 32) / (screenHeight * 0.4);
+
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Center(child: Text("Calculator")),
+        backgroundColor: Colors.amber,
+        foregroundColor: Colors.black,
+      ),
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Display area
+            Expanded(
+              flex: orientation == Orientation.portrait ? 2 : 1,
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
                 alignment: Alignment.bottomRight,
-                fit: BoxFit.scaleDown,
-                child: Text(
-                  expression.isEmpty ? "0" : expression,
-                  style: const TextStyle(
-                    fontSize: 48,
-                    fontWeight: FontWeight.bold,
+                child: FittedBox(
+                  alignment: Alignment.bottomRight,
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    expression.isEmpty ? "0" : expression,
+                    style: TextStyle(
+                      fontSize: displayFontSize, // Dynamically calculated font size
+                      fontWeight: FontWeight.bold,
+                    ),
+                    maxLines: 1,
+                    textAlign: TextAlign.end,
                   ),
-                  maxLines: 1,
-                  textAlign: TextAlign.end,
                 ),
               ),
             ),
-          ),
 
-          // Buttons grid
-          Expanded(
-            flex: 5,
-            child: GridView.builder(
-              padding: const EdgeInsets.all(8),
-              itemCount: Btn.buttonValues.length,
-              physics: const NeverScrollableScrollPhysics(), // prevent scroll
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 4,
-                mainAxisSpacing: 8,
-                crossAxisSpacing: 8,
-                childAspectRatio: orientation == Orientation.portrait ? 1 : 1.4,
+            // Buttons grid
+            Expanded(
+              flex: 5,
+              child: GridView.builder(
+                padding: const EdgeInsets.all(8),
+                itemCount: Btn.buttonValues.length,
+                physics: const NeverScrollableScrollPhysics(), // Prevent scroll
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: crossAxisCount, // Adjust based on orientation
+                  mainAxisSpacing: 8,
+                  crossAxisSpacing: 8,
+                  childAspectRatio: childAspectRatio, // Ensure buttons fit well
+                ),
+                itemBuilder: (context, index) {
+                  final value = Btn.buttonValues[index];
+                  return buildButton(value);
+                },
               ),
-              itemBuilder: (context, index) {
-                final value = Btn.buttonValues[index];
-                return buildButton(value);
-              },
             ),
-          ),
-        ],
+          ],
+        ),
       ),
-    ),
-  );
-}
+    );
+  }
 
-// button
-  Widget buildButton(value) {
+  // Build the button UI
+  Widget buildButton(String value) {
     return Padding(
       padding: const EdgeInsets.all(4.0),
       child: Material(
@@ -89,7 +97,8 @@ Widget build(BuildContext context) {
           borderSide: const BorderSide(
             color: Colors.white24,
           ),
-          borderRadius: BorderRadius.circular(100)),
+          borderRadius: BorderRadius.circular(100),
+        ),
         child: InkWell(
           onTap: () => onBtnTap(value),
           child: Center(
@@ -97,94 +106,76 @@ Widget build(BuildContext context) {
               value,
               style: const TextStyle(
                 fontWeight: FontWeight.bold,
-                fontSize: 24
-                ),
+                fontSize: 24, // You can adjust this size as necessary
               ),
             ),
+          ),
         ),
       ),
     );
   }
 
-// void onBtnTap(String value){
-//     if (value != Btn.dot && int.tryParse(value) == null){
-//       if (op.isNotEmpty && n2.isNotEmpty) {
-//         //calualte
-//       }
-//       op = value;
-//     } else if (n1.isEmpty || op.isEmpty){
-//       if (value == Btn.dot && n1.contains(Btn.dot)){
-
-//       }
-//     }
-//   setState(() {
-//     n1 += value;
-//   });
-// }
-
-void onBtnTap(String value) {
-  setState(() {
-    // Handle 'C' (backspace) — deletes one character
-    if (value == Btn.clr) {
-      if (expression.isNotEmpty) {
-        expression = expression.substring(0, expression.length - 1);
+  // Button tap logic
+  void onBtnTap(String value) {
+    setState(() {
+      // Handle 'C' (backspace) — deletes one character
+      if (value == Btn.clr) {
+        if (expression.isNotEmpty) {
+          expression = expression.substring(0, expression.length - 1);
+        }
+        return;
       }
-      return;
-    }
 
-    // Handle 'D' (delete) — clears the entire expression
-    if (value == Btn.del) {
-      expression = "";
-      return;
-    }
-
-    // Handle '=' (calculate result)
-    if (value == Btn.calculate) {
-      String exp = expression
-          .replaceAll(Btn.multiply, '*')
-          .replaceAll(Btn.divide, '/'); // Handle custom symbols like × and ÷
-
-      try {
-        // Use ShuntingYardParser to evaluate the expression
-        final parser = ShuntingYardParser();
-        final parsedExp = parser.parse(exp);
-        final result = parsedExp.evaluate(EvaluationType.REAL, ContextModel());
-
-        // Display the result
-        expression = result.toStringAsFixed(result.truncateToDouble() == result ? 0 : 2);
-      } catch (e) {
-        expression = "Error";  // In case of any error during parsing
+      // Handle 'D' (delete) — clears the entire expression
+      if (value == Btn.del) {
+        expression = "";
+        return;
       }
-      return;
-    }
 
-    // Prevent multiple decimal points in a number
-    if (value == Btn.dot) {
-      List<String> parts = expression.split(RegExp(r'[\+\-\*/]'));
-      if (parts.isNotEmpty && parts.last.contains('.')) return;
-    }
+      // Handle '=' (calculate result)
+      if (value == Btn.calculate) {
+        String exp = expression
+            .replaceAll(Btn.multiply, '*')
+            .replaceAll(Btn.divide, '/'); // Handle custom symbols like × and ÷
 
-    // Append the button value to the expression
-    expression += value;
-  });
-}
+        try {
+          // Use ShuntingYardParser to evaluate the expression
+          final parser = ShuntingYardParser();
+          final parsedExp = parser.parse(exp);
+          final result = parsedExp.evaluate(EvaluationType.REAL, ContextModel());
 
+          // Display the result
+          expression = result.toStringAsFixed(result.truncateToDouble() == result ? 0 : 2);
+        } catch (e) {
+          expression = "Error";  // In case of any error during parsing
+        }
+        return;
+      }
 
+      // Prevent multiple decimal points in a number
+      if (value == Btn.dot) {
+        List<String> parts = expression.split(RegExp(r'[\+\-\*/]'));
+        if (parts.isNotEmpty && parts.last.contains('.')) return;
+      }
 
+      // Append the button value to the expression
+      expression += value;
+    });
+  }
 
-//color button
-  Color getBtnColor(value) {
-    return  [Btn.del, Btn.clr].contains(value)
-        ?Colors.blueGrey
-        :[
-          Btn.per, 
-          Btn.multiply,
-          Btn.add,
-          Btn.subtract,
-          Btn.divide,
-          Btn.calculate
+  // Button color logic
+  Color getBtnColor(String value) {
+    return [Btn.del, Btn.clr].contains(value)
+        ? Colors.blueGrey
+        : [
+            Btn.per,
+            Btn.multiply,
+            Btn.add,
+            Btn.subtract,
+            Btn.divide,
+            Btn.calculate
           ].contains(value)
-          ?Colors.orange
-          :Colors.black87;
+            ? Colors.orange
+            : Colors.black87;
   }
 }
