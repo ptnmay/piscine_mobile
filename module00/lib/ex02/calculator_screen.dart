@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:math_expressions/math_expressions.dart';
-import 'package:module00/ex03/button_values.dart';
+import 'package:module00/ex02/button_values.dart';
 
 class CalculatorScreen extends StatefulWidget {
   const CalculatorScreen({super.key});
@@ -19,9 +18,6 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
     final screenWidth = screenSize.width;
     final screenHeight = screenSize.height;
 
-    // Calculate dynamic font size based on screen size
-    double displayFontSize = screenWidth / 8;
-
     // Adjust the button grid size based on screen width and orientation
     int crossAxisCount = orientation == Orientation.portrait ? 4 : 4;
 
@@ -37,41 +33,41 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
       ),
       body: SafeArea(
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.end,
+          crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             // Display area
-            Expanded(
-              flex: orientation == Orientation.portrait ? 2 : 1,
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(16),
-                alignment: Alignment.bottomRight,
-                child: FittedBox(
-                  alignment: Alignment.bottomRight,
-                  fit: BoxFit.scaleDown,
-                  child: Text(
-                    expression.isEmpty ? "0" : expression,
-                    style: TextStyle(
-                      fontSize: displayFontSize, // Dynamically calculated font size
-                      fontWeight: FontWeight.bold,
-                    ),
-                    maxLines: 1,
-                    textAlign: TextAlign.end,
+            Padding(
+              padding: const EdgeInsets.all(5),
+                child: Text('0',
+                  style: TextStyle(
+                  color: Colors.white24,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20
                   ),
-                ),
-              ),
+                )
             ),
-
+            Padding(
+              padding: const EdgeInsets.all(5),
+                child: Text('1',
+                  style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 24
+                  ),
+                )
+            ),
             // Buttons grid
             Expanded(
-              flex: 5,
+              flex: 4,
               child: GridView.builder(
                 padding: const EdgeInsets.all(8),
                 itemCount: Btn.buttonValues.length,
                 physics: const NeverScrollableScrollPhysics(), // Prevent scroll
                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: crossAxisCount, // Adjust based on orientation
-                  mainAxisSpacing: 8,
-                  crossAxisSpacing: 8,
+                  mainAxisSpacing: 6,
+                  crossAxisSpacing: 6,
                   childAspectRatio: childAspectRatio, // Ensure buttons fit well
                 ),
                 itemBuilder: (context, index) {
@@ -118,50 +114,6 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
   // Button tap logic
   void onBtnTap(String value) {
     debugPrint("Button pressed: $value");
-    setState(() {
-      // Handle 'C' (backspace) — deletes one character
-      if (value == Btn.clr) {
-        if (expression.isNotEmpty) {
-          expression = expression.substring(0, expression.length - 1);
-        }
-        return;
-      }
-
-      // Handle 'D' (delete) — clears the entire expression
-      if (value == Btn.del) {
-        expression = "";
-        return;
-      }
-
-      // Handle '=' (calculate result)
-      if (value == Btn.calculate) {
-        String exp = expression
-            .replaceAll(Btn.multiply, '*')
-            .replaceAll(Btn.divide, '/'); // Handle custom symbols like × and ÷
-
-        try {
-          // Use ShuntingYardParser to evaluate the expression
-          final parser = ShuntingYardParser();
-          final parsedExp = parser.parse(exp);
-          final result = parsedExp.evaluate(EvaluationType.REAL, ContextModel());
-
-          // Display the result
-          expression = result.toStringAsFixed(result.truncateToDouble() == result ? 0 : 2);
-        } catch (e) {
-          expression = "Error";  // In case of any error during parsing
-        }
-        return;
-      }
-
-      // Prevent multiple decimal points in a number
-      if (value == Btn.dot) {
-        List<String> parts = expression.split(RegExp(r'[\+\-\*/]'));
-        if (parts.isNotEmpty && parts.last.contains('.')) return;
-      }
-
-      // Append the button value to the expression
-      expression += value;
-    });
   }
 
   // Button color logic

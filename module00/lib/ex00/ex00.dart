@@ -14,7 +14,7 @@ class Ex00 extends StatelessWidget {
             SizedBox(height: 20),
             ElevatedButton(
                 onPressed: () {
-                  print('Button pressed');
+                  debugPrint('Button pressed');
                 },
                 child: const Text('Press me')),
           ],
