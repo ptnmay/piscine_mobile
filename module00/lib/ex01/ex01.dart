@@ -4,10 +4,10 @@ class Ex01 extends StatefulWidget {
   const Ex01({super.key});
 
   @override
-  _Ex01State createState() => _Ex01State();
+  Ex01State createState() => Ex01State();
 }
 
-class _Ex01State extends State<Ex01> {
+class Ex01State extends State<Ex01> {
   String _displayText = 'Press the button below:';
 
   void _buttonPressed() {
@@ -19,8 +19,7 @@ class _Ex01State extends State<Ex01> {
       }
     });
 
-        debugPrint("Button pressed");
-
+    debugPrint("Button pressed");
   }
 
   @override
