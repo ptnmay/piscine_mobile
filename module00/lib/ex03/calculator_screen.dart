@@ -36,7 +36,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
-            // Display area (unchanged structure, just added one more line inside)
+            // Display area (added one more line inside)
             Expanded(
               flex: orientation == Orientation.portrait ? 3 : 1,
               child: Container(
