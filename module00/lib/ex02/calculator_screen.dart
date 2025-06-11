@@ -98,7 +98,6 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
     );
   }
 
-  // Build the button UI
   Widget buildButton(String value) {
     return Padding(
       padding: const EdgeInsets.all(4.0),
@@ -118,7 +117,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
               value,
               style: const TextStyle(
                 fontWeight: FontWeight.bold,
-                fontSize: 24, // You can adjust this size as necessary
+                fontSize: 24,
               ),
             ),
           ),
@@ -127,12 +126,10 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
     );
   }
 
-  // Button tap logic
   void onBtnTap(String value) {
     debugPrint("Button pressed: $value");
   }
 
-  // Button color logic
   Color getBtnColor(String value) {
     return [Btn.del, Btn.clr].contains(value)
         ? Colors.blueGrey

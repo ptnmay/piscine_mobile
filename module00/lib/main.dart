@@ -30,6 +30,9 @@ class MainApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
+      // home: getExercise(0),
+      // home: getExercise(1),
+      // home: getExercise(2),
       home: getExercise(3),
     );
   }
