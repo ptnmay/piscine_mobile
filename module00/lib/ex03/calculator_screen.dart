@@ -36,7 +36,6 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
-            // Display area (added one more line inside)
             Expanded(
               flex: orientation == Orientation.portrait ? 3 : 1,
               child: Container(
@@ -75,7 +74,6 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
               ),
             ),
 
-            // Buttons grid
             Expanded(
               flex: 5,
               child: GridView.builder(
@@ -154,6 +152,8 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
           sum = expression;
           ans = result.toStringAsFixed(result.truncateToDouble() == result ? 0 : 2);
           expression = ans;
+          if (ans == "NaN" || ans == "Infinity" || ans == "-Infinity") {
+            throw Exception(); }
         } catch (e) {
           sum = expression;
           ans = "Error";
@@ -164,7 +164,12 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
 
       if (value == Btn.dot) {
         List<String> parts = expression.split(RegExp(r'[\+\-\*/]'));
-        if (parts.isNotEmpty && parts.last.contains('.')) return;
+        String lastPart = parts.isNotEmpty ? parts.last : '';
+
+        if (lastPart.isEmpty) {
+          expression += '0';
+        }
+        if (lastPart.contains('.')) return;
       }
 
       expression += value;
