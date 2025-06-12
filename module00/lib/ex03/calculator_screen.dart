@@ -172,6 +172,13 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
         if (lastPart.contains('.')) return;
       }
 
+      bool isOperator(String char) => ['+', '-', '*', '/', Btn.multiply, Btn.divide].contains(char);
+      if (expression.isNotEmpty &&
+          isOperator(expression[expression.length - 1]) &&
+          isOperator(value)) {
+        return ;
+      }
+
       expression += value;
       ans = expression;
     });
