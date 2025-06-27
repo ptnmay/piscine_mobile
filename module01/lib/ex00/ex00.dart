@@ -1,47 +1,98 @@
 import 'package:flutter/material.dart';
 
-class Ex00 extends StatelessWidget {
+class Ex00 extends StatefulWidget {
   const Ex00({super.key});
 
   @override
+  State<Ex00> createState() => _Ex00State();
+}
+
+class _Ex00State extends State<Ex00> with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+
+
+  static const textColor = Color.fromARGB(255, 0, 54, 105);
+  static const pinkWater = Color.fromARGB(255, 237, 174, 192);
+  static const turquoise = Color.fromARGB(255, 48, 213, 200);
+  static const spearmint = Color.fromARGB(255, 69, 176, 140);
+  static const peach = Color.fromARGB(255, 255, 229, 180);
+
+
+  final List<Tab> tabs = const [
+    Tab(icon: Icon(Icons.wb_sunny), text: 'Currently'),
+    Tab(icon: Icon(Icons.today), text: 'Today'),
+    Tab(icon: Icon(Icons.calendar_view_week), text: 'Weekly'),
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: tabs.length, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return DefaultTabController(
-      length: 3,
-      child: Scaffold(
-        appBar: AppBar(
-          bottom: const TabBar(
-            tabs: [
-              Tab(
-                icon: Icon(Icons.location_pin),
-                text: 'Currently'),
-              Tab(
-                icon: Icon(Icons.calendar_today),
-                text: 'Today'),
-              Tab(
-                icon: Icon(Icons.calendar_view_week),
-                text: 'Weekly'),
-            ],
-          ),
-          title: const Text('ButtomBar'),
+    return Scaffold(
+      backgroundColor: turquoise,
+      appBar: AppBar(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(
+            bottom: Radius.circular(30)
+          )
         ),
-        body: TabBarView(
+
+        toolbarHeight: 100,
+        
+        backgroundColor: pinkWater,
+        title: Row(
           children: [
-            Container(
-              color: Color.fromARGB(255, 69, 176, 140),
-              child: const Center(
-                child: Text('Currently')),
+            Expanded(
+              child: TextField(
+                decoration: InputDecoration(
+                  hintText: 'Search city...',
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 15),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  filled: true,
+                  fillColor: peach,
+                ),
+              ),
             ),
-            Container(
-              color: Color.fromARGB(255, 237, 174, 192),
-              child: const Center(
-                child: Text('Today')),
+            const SizedBox(width: 10),
+            IconButton(
+              icon: const Icon(Icons.search),
+              onPressed: () {
+              },
             ),
-            Container(
-              color: Color.fromARGB(255, 48, 213, 200),
-              child: const Center(
-                child: Text('Weekly')),
-            ),
-          ],),
+          ],
+        ),
+      ),
+
+      body: TabBarView(
+        controller: _tabController,
+        children: const [
+          Center(child: Text('Currently',style: TextStyle(fontSize: 24, color: textColor))),
+          Center(child: Text('Today', style: TextStyle(fontSize: 24, color: textColor))),
+          Center(child: Text('Weekly', style: TextStyle(fontSize: 24, color: textColor))),
+        ],
+      ),
+
+      bottomNavigationBar: BottomAppBar(
+        color: pinkWater,
+        child: TabBar(
+          controller: _tabController,
+          tabs: tabs,
+          labelColor: peach,
+          unselectedLabelColor: spearmint,
+          indicatorColor: peach,
+        ),
       ),
     );
   }
