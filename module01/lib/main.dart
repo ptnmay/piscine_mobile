@@ -23,6 +23,7 @@ class MainApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      title: "weather_app",
       debugShowCheckedModeBanner: false,
       home: getExercise(0),
       // home: getExercise(1),
