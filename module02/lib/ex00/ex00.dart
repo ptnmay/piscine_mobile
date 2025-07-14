@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 
 class Ex00 extends StatefulWidget {
   const Ex00({super.key});
@@ -38,17 +39,74 @@ class _Ex00State extends State<Ex00> with SingleTickerProviderStateMixin {
     super.dispose();
   }
 
-  void _onSearch() {
-    setState(() {
-      _displayText = _searchController.text.trim();
-    });
+void _onSearch() {
+  setState(() {
+    _displayText = _searchController.text.trim();
+    if (_displayText.isNotEmpty) {
+      _locationDenied = false; // ✅ Remove red warning and show tabs again
+    }
+  });
+}
+
+
+void _onGeolocation() {
+  _handleLocationPermission();
+}
+
+  bool _locationDenied = false; // new flag
+Future<void> _handleLocationPermission() async {
+  LocationPermission permission = await Geolocator.checkPermission();
+
+  if (permission == LocationPermission.denied) {
+    permission = await Geolocator.requestPermission();
+    if (permission == LocationPermission.denied) {
+      setState(() {
+        _displayText = 'Location permission denied.';
+        _locationDenied = true;
+      });
+      return;
+    }
   }
 
-  void _onGeolocation() {
+  if (permission == LocationPermission.deniedForever) {
     setState(() {
-      _displayText = 'Geolocation';
+      _displayText = 'Location permission permanently denied.';
+      _locationDenied = true;
+    });
+    return;
+  }
+
+  // Location granted
+  setState(() {
+    _locationDenied = false;
+  });
+
+  _getCurrentPosition();
+}
+
+
+Future<void> _getCurrentPosition() async {
+  try {
+    final locationSettings = const LocationSettings(
+      accuracy: LocationAccuracy.high,
+    );
+
+    Position position = await Geolocator.getCurrentPosition(
+      locationSettings: locationSettings,
+    );
+
+    setState(() {
+      _displayText =
+          'Latitude: ${position.latitude}\nLongitude: ${position.longitude}';
+    });
+  } catch (e) {
+    setState(() {
+      _displayText = 'Failed to get location: $e';
     });
   }
+}
+
+
 
   Widget _buildTabContent(String label) {
     return Center(
@@ -99,7 +157,19 @@ class _Ex00State extends State<Ex00> with SingleTickerProviderStateMixin {
           ],
         ),
       ),
-      body: TabBarView(
+body: _locationDenied
+    ? Center(
+        child: Text(
+          _displayText,
+          style: const TextStyle(
+            fontSize: 20,
+            color: Colors.red,
+            fontWeight: FontWeight.bold,
+          ),
+          textAlign: TextAlign.center,
+        ),
+      )
+    : TabBarView(
         controller: _tabController,
         children: [
           _buildTabContent('Currently'),
@@ -107,6 +177,7 @@ class _Ex00State extends State<Ex00> with SingleTickerProviderStateMixin {
           _buildTabContent('Weekly'),
         ],
       ),
+
       bottomNavigationBar: BottomAppBar(
         color: pinkWater,
         child: TabBar(
