@@ -9,12 +9,17 @@ class Ex00 extends StatefulWidget {
 }
 
 class _Ex00State extends State<Ex00> with SingleTickerProviderStateMixin {
+  bool _locationDenied = false;
+  String _displayText = '';
+  
   late TabController _tabController;
-
+  final TextEditingController _searchController = TextEditingController();
+  
   static const textColor = Color.fromARGB(255, 0, 54, 105);
   static const pinkWater = Color.fromARGB(255, 237, 174, 192);
   static const turquoise = Color.fromARGB(255, 48, 213, 200);
   static const spearmint = Color.fromARGB(255, 69, 176, 140);
+  static const textDenied = Color.fromARGB(255, 213, 48, 61);
   static const peach = Color.fromARGB(255, 255, 229, 180);
 
   final List<Tab> tabs = const [
@@ -23,8 +28,6 @@ class _Ex00State extends State<Ex00> with SingleTickerProviderStateMixin {
     Tab(icon: Icon(Icons.calendar_view_week), text: 'Weekly'),
   ];
 
-  final TextEditingController _searchController = TextEditingController();
-  String _displayText = ''; // Dynamic part to display in tabs
 
   @override
   void initState() {
@@ -39,80 +42,80 @@ class _Ex00State extends State<Ex00> with SingleTickerProviderStateMixin {
     super.dispose();
   }
 
-void _onSearch() {
-  setState(() {
-    _displayText = _searchController.text.trim();
-    if (_displayText.isNotEmpty) {
-      _locationDenied = false; // ✅ Remove red warning and show tabs again
-    }
-  });
-}
+  void _onSearch() {
+    setState(() {
+      _displayText = _searchController.text.trim();
+      if (_displayText.isNotEmpty) {
+        _locationDenied = false;
+      }
+    });
+  }
 
+  void _onGeolocation() {
+    _handleLocationPermission();
+  }
 
-void _onGeolocation() {
-  _handleLocationPermission();
-}
+  Future<void> _handleLocationPermission() async {
+    LocationPermission permission = await Geolocator.checkPermission();
 
-  bool _locationDenied = false; // new flag
-Future<void> _handleLocationPermission() async {
-  LocationPermission permission = await Geolocator.checkPermission();
-
-  if (permission == LocationPermission.denied) {
-    permission = await Geolocator.requestPermission();
     if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        setState(() {
+          _displayText = 'Location permission denied.';
+          _locationDenied = true;
+        });
+        return;
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
       setState(() {
-        _displayText = 'Location permission denied.';
+        _displayText = 'Location permission permanently denied.';
         _locationDenied = true;
       });
       return;
     }
+
+    // Location granted
+    setState(() {
+      _locationDenied = false;
+    });
+
+    _getCurrentPosition();
   }
 
-  if (permission == LocationPermission.deniedForever) {
-    setState(() {
-      _displayText = 'Location permission permanently denied.';
-      _locationDenied = true;
-    });
-    return;
+  Future<void> _getCurrentPosition() async {
+    try {
+      final locationSettings = const LocationSettings(
+        accuracy: LocationAccuracy.high,
+      );
+
+      Position position = await Geolocator.getCurrentPosition(
+        locationSettings: locationSettings,
+      );
+
+      setState(() {
+        _displayText =
+            'Latitude: ${position.latitude}\nLongitude: ${position.longitude}';
+      });
+    } catch (e) {
+      setState(() {
+        _displayText = 'Failed to get location: $e';
+      });
+    }
   }
 
-  // Location granted
-  setState(() {
-    _locationDenied = false;
-  });
-
-  _getCurrentPosition();
-}
-
-
-Future<void> _getCurrentPosition() async {
-  try {
-    final locationSettings = const LocationSettings(
-      accuracy: LocationAccuracy.high,
-    );
-
-    Position position = await Geolocator.getCurrentPosition(
-      locationSettings: locationSettings,
-    );
-
-    setState(() {
-      _displayText =
-          'Latitude: ${position.latitude}\nLongitude: ${position.longitude}';
-    });
-  } catch (e) {
-    setState(() {
-      _displayText = 'Failed to get location: $e';
-    });
-  }
-}
-
-
-
-  Widget _buildTabContent(String label) {
+  Widget _buildTabContent(String label, bool locationDenied) {
     return Center(
       child: Text(
-        '$label \n ${_displayText.isEmpty ? "" : _displayText}',
-        style: const TextStyle(fontSize: 24, color: textColor),
+        locationDenied
+            ? _displayText
+            : '$label \n ${_displayText.isEmpty ? "" : _displayText}',
+        style: TextStyle(
+          fontSize: 24,
+          color: locationDenied ? textDenied : textColor,
+        ),
         textAlign: TextAlign.center,
       ),
     );
@@ -146,10 +149,7 @@ Future<void> _getCurrentPosition() async {
               ),
             ),
             const SizedBox(width: 10),
-            IconButton(
-              icon: const Icon(Icons.search),
-              onPressed: _onSearch,
-            ),
+            IconButton(icon: const Icon(Icons.search), onPressed: _onSearch),
             IconButton(
               icon: const Icon(Icons.my_location),
               onPressed: _onGeolocation,
@@ -157,24 +157,12 @@ Future<void> _getCurrentPosition() async {
           ],
         ),
       ),
-body: _locationDenied
-    ? Center(
-        child: Text(
-          _displayText,
-          style: const TextStyle(
-            fontSize: 20,
-            color: Colors.red,
-            fontWeight: FontWeight.bold,
-          ),
-          textAlign: TextAlign.center,
-        ),
-      )
-    : TabBarView(
+      body: TabBarView(
         controller: _tabController,
         children: [
-          _buildTabContent('Currently'),
-          _buildTabContent('Today'),
-          _buildTabContent('Weekly'),
+          _buildTabContent('Currently', _locationDenied),
+          _buildTabContent('Today', _locationDenied),
+          _buildTabContent('Weekly', _locationDenied),
         ],
       ),
 
