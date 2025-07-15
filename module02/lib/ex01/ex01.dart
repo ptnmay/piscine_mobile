@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
+import 'color.dart';
 
 class Ex01 extends StatefulWidget {
   const Ex01({super.key});
@@ -8,22 +10,12 @@ class Ex01 extends StatefulWidget {
 }
 
 class _Ex01State extends State<Ex01> with SingleTickerProviderStateMixin {
+
+  bool _locationDenied = false;
+  String _displayText = '';
+  
   late TabController _tabController;
-
-  static const textColor = Color.fromARGB(255, 0, 54, 105);
-  static const pinkWater = Color.fromARGB(255, 237, 174, 192);
-  static const turquoise = Color.fromARGB(255, 48, 213, 200);
-  static const spearmint = Color.fromARGB(255, 69, 176, 140);
-  static const peach = Color.fromARGB(255, 255, 229, 180);
-
-  final List<Tab> tabs = const [
-    Tab(icon: Icon(Icons.wb_sunny), text: 'Currently'),
-    Tab(icon: Icon(Icons.today), text: 'Today'),
-    Tab(icon: Icon(Icons.calendar_view_week), text: 'Weekly'),
-  ];
-
   final TextEditingController _searchController = TextEditingController();
-  String _displayText = ''; // Dynamic part to display in tabs
 
   @override
   void initState() {
@@ -41,20 +33,76 @@ class _Ex01State extends State<Ex01> with SingleTickerProviderStateMixin {
   void _onSearch() {
     setState(() {
       _displayText = _searchController.text.trim();
+      if (_displayText.isNotEmpty) {
+        _locationDenied = false;
+      }
     });
   }
 
   void _onGeolocation() {
-    setState(() {
-      _displayText = 'Geolocation';
-    });
+    _handleLocationPermission();
   }
 
-  Widget _buildTabContent(String label) {
+  Future<void> _handleLocationPermission() async {
+    LocationPermission permission = await Geolocator.checkPermission();
+
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        setState(() {
+          _displayText = 'Location permission denied.';
+          _locationDenied = true;
+        });
+        return;
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      setState(() {
+        _displayText = 'Location permission permanently denied.';
+        _locationDenied = true;
+      });
+      return;
+    }
+
+    setState(() {
+      _locationDenied = false;
+    });
+
+    _getCurrentPosition();
+  }
+
+  Future<void> _getCurrentPosition() async {
+    try {
+      final locationSettings = const LocationSettings(
+        accuracy: LocationAccuracy.high,
+      );
+
+      Position position = await Geolocator.getCurrentPosition(
+        locationSettings: locationSettings,
+      );
+
+      setState(() {
+        _displayText =
+            'Latitude: ${position.latitude}\nLongitude: ${position.longitude}';
+      });
+    } catch (e) {
+      setState(() {
+        _displayText = 'Failed to get location: $e';
+      });
+    }
+  }
+
+  Widget _buildTabContent(String label, bool locationDenied) {
     return Center(
       child: Text(
-        '$label \n ${_displayText.isEmpty ? "" : _displayText}',
-        style: const TextStyle(fontSize: 24, color: textColor),
+        locationDenied
+            ? _displayText
+            : '$label \n ${_displayText.isEmpty ? "" : _displayText}',
+        style: TextStyle(
+          fontSize: 24,
+          color: locationDenied ? textDenied : textColor,
+        ),
         textAlign: TextAlign.center,
       ),
     );
@@ -88,10 +136,7 @@ class _Ex01State extends State<Ex01> with SingleTickerProviderStateMixin {
               ),
             ),
             const SizedBox(width: 10),
-            IconButton(
-              icon: const Icon(Icons.search),
-              onPressed: _onSearch,
-            ),
+            IconButton(icon: const Icon(Icons.search), onPressed: _onSearch),
             IconButton(
               icon: const Icon(Icons.my_location),
               onPressed: _onGeolocation,
@@ -102,11 +147,12 @@ class _Ex01State extends State<Ex01> with SingleTickerProviderStateMixin {
       body: TabBarView(
         controller: _tabController,
         children: [
-          _buildTabContent('Currently'),
-          _buildTabContent('Today'),
-          _buildTabContent('Weekly'),
+          _buildTabContent('Currently', _locationDenied),
+          _buildTabContent('Today', _locationDenied),
+          _buildTabContent('Weekly', _locationDenied),
         ],
       ),
+
       bottomNavigationBar: BottomAppBar(
         color: pinkWater,
         child: TabBar(
